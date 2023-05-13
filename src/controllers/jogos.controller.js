@@ -21,7 +21,7 @@ export async function postJogos(req, res){
             VALUES ($1, $2, $3, $4)
         `, [name, image, stockTotal, pricePerDay])
 
-        res.status(200).send('Jogo inserido com sucesso!')
+        res.status(201).send('Jogo inserido com sucesso!')
     } catch (err){
         res.status(500).send(err.message)
     }
