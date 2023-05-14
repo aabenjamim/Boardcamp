@@ -20,7 +20,7 @@ export async function postJogos(req, res){
         SELECT EXISTS(SELECT 1 FROM games WHERE name = $1)
         `, [name])
 
-        if(!existe){
+        if(!existe.rows[0].exists){
             await db.query(`
             INSERT INTO games (name, image, "stockTotal", "pricePerDay")
                 VALUES ($1, $2, $3, $4)
