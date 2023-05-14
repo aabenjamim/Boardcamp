@@ -1,10 +1,17 @@
 import { db } from "../database/database.connection.js";
+import dayjs from 'dayjs'
 
 //listar clientes
 export async function getClientes(req, res){
     try{
         const clientes = await db.query(`SELECT * FROM customers;`)
-        res.send(clientes.rows)
+
+        const clientesFormatados = clientes.rows.map((c) => ({
+            ...c,
+            birthday: dayjs(c.birthday).format('YYYY-MM-DD'),
+          }))
+
+        res.send(clientesFormatados)
     } catch(err){
         res.status(500).send(err.message)
     }
@@ -47,7 +54,12 @@ export async function getClientesId(req, res){
         if(cliente.rows.length==0){
             res.status(404). send("Cliente não cadastrado!")
         } else{
-            res.send(cliente.rows[0])
+            const clienteFormatado = {
+                ...cliente.rows[0],
+                birthday: dayjs(cliente.rows[0].birthday).format('YYYY-MM-DD'),
+              }
+       
+            res.send(clienteFormatado)
         }
     } catch(err){
         res.status(500).send(err.message)
@@ -56,5 +68,5 @@ export async function getClientesId(req, res){
 
 //alterar cliente por id
 export async function putClientes(req, res){
-    
+
 }
