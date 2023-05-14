@@ -12,31 +12,42 @@ export async function getAlugueis(req, res){
 }
 
 //inserir alugueis
-/*
-- **Regras de Negócio**
-    - Ao inserir um aluguel, os campos `rentDate` e `originalPrice` devem ser populados 
-    automaticamente antes de salvá-lo:
-        - `rentDate`: data atual no momento da inserção.
-        - `originalPrice`: `daysRented` multiplicado pelo preço por dia do jogo no momento 
-        da inserção.
-    - Ao inserir um aluguel, os campos `returnDate` e `delayFee` devem sempre começar como `null`.
-    - Ao inserir um aluguel, deve verificar se `customerId` se refere a um cliente existente. 
-    Se não, deve responder com **status 400.**
-    - Ao inserir um aluguel, deve verificar se `gameId` se refere a um jogo existente. 
-    Se não, deve responder com **status 400.**
-    - `daysRented` deve ser um número maior que 0. Se não, deve responder com **status 400.**
-    - Ao inserir um aluguel, deve-se validar que existem jogos disponíveis, ou seja, que não tem
-     alugueis em aberto acima da quantidade de jogos em estoque. Caso contrário, deve retornar 
-     **status 400.**
-*/
 export async function postAlugueis(req, res){
-    const { customerId, gameId, daysRented } = req.body
+   const { customerId, gameId, daysRented } = req.body
 
     try{
+        const cliente = await db.query(`SELECT * FROM customers WHERE id=$1;`,
+        [customerId])
+        if(cliente.rows.length === 0){
+            return res.status(400).send("Cliente não encontrado!")
+        }
+
+        const jogo = await db.query(`SELECT * FROM games WHERE id=$1`,
+        [gameId])
+        if(jogo.rows.length === 0){
+            return res.status(400).send("Jogo não encontrado!")
+        }
+
+        const alugueisEmAberto = await db.query(`
+        SELECT * FROM rentals WHERE "gameId"=$1 AND "returnDate" IS NULL`, [gameId])
+
+        const jogosDisponiveis = jogo.rows[0].stockTotal
+        if(alugueisEmAberto.rowCount >= jogosDisponiveis){
+            return res.status(400).send('Não há jogos disponíveis para aluguel no momento.')
+        }
+        
+        const valor = await db.query(`
+        SELECT "pricePerDay" FROM games WHERE id=$1`, [gameId])
+
+        const valorFormatado = valor.rows[0].pricePerDay
+        const originalPrice = valorFormatado*daysRented
+        const rentDate = dayjs().format('YYYY-MM-DD')
+        
         await db.query(`
-        INSERT INTO rentals ("customerId", "gameId", "daysRented", "rentDate", "originalPrice")
-            VALUES ($1, $2, $3, ${dayjs().format('YYYY-MM-DD')}, $3*)
-        `, [customerId, gameId, daysRented])
+        INSERT INTO rentals ("customerId", "gameId", "rentDate", "returnDate", 
+        "daysRented", "originalPrice", "delayFee")
+            VALUES ($1, $2, $3, null, $4, $5, null)
+        `, [customerId, gameId, rentDate, daysRented, originalPrice])
 
         res.status(201).send("Aluguel inserido!")
     } catch(err){
