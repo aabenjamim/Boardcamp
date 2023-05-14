@@ -6,6 +6,6 @@ import { jogoSchema } from "../schemas/jogos.schema.js"
 const jogosRouter = Router()
 
 jogosRouter.get('/games', getJogos)
-jogosRouter.post('/games', validate(jogoSchema), postJogos)
+jogosRouter.post('/games', validate(jogoSchema, 400), postJogos)
 
 export default jogosRouter

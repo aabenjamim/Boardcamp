@@ -1,12 +1,12 @@
 
-export function validate(schema){
+export function validate(schema, errorStatus){
 
     return(req, res, next)=>{
         const validacao = schema.validate(req.body, {abortEarly: false})
         
         if(validacao.error) {
             const errors = validacao.error.details.map(detail => detail.message)
-            return res.status(422).send(errors)
+            return res.status(errorStatus).send(errors)
         }
 
         next()
