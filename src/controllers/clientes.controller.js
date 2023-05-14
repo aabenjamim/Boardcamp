@@ -25,3 +25,21 @@ export async function postClientes(req, res){
         res.status(500).send(err.message)
     }
 }
+
+//buscar cliente por id
+export async function getClientesId(req, res){
+    const {id} = req.params
+
+    try{
+        const cliente = await db.query(`
+        SELECT  id, name, phone, cpf, birthday FROM customers WHERE id = $1;
+        `, [id])
+        if(cliente.rows.length==0){
+            res.status(404). send("Cliente não cadastrado!")
+        } else{
+            res.send(cliente.rows[0])
+        }
+    } catch(err){
+        res.status(500).send(err.message)
+    }
+}
