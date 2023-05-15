@@ -110,12 +110,31 @@ export async function postRetorno(req, res){
         }
 
         await db.query(`
-        UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3,
+        UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3
         `, [returnDate, delayFee, id])
 
         res.status(200).send("Aluguel retornado com sucesso!")
 
     } catch(err){
         res.status(500).send(err.message)
+    }
+}
+
+//apagar aluguel
+export async function deleteAluguel(req, res){
+    const {id} = req.params
+
+    try{
+        const aluguel = await db.query(`SELECT * FROM rentals WHERE id=$1`,
+        [id])
+        if(aluguel.rows.length === 0){
+            return res.status(404).send("Aluguel não encontrado!")
+        }
+
+        await db.query(`DELETE FROM rentals WHERE id = $1;`, [id])
+
+        res.status(200).send("Aluguel deletado!")
+    } catch(err){
+
     }
 }
