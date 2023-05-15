@@ -81,7 +81,7 @@ export async function postAlugueis(req, res){
 }
 
 //finalizar alugueis
-export async function postRetorno(req, res) {
+/*export async function postRetorno(req, res) {
   const { id } = req.params;
 
   try {
@@ -110,7 +110,7 @@ export async function postRetorno(req, res) {
     WHERE id = $2;
   `, [returnDate, id]);
 
-/*
+
     const returnDate = dayjs().format('YYYY-MM-DD');
     const rentDate = dayjs(aluguel.rows[0].rentDate).format('YYYY-MM-DD');
     const daysRented = aluguel.rows[0].daysRented;
