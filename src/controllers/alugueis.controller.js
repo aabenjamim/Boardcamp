@@ -99,14 +99,17 @@ export async function postRetorno(req, res){
             return res.status(400).send("Aluguel já finalizado!")
         }
 
+        const jogo = await db.query(`SELECT * FROM games WHERE id=$1`,
+        [aluguel.gameId])
+
         const returnDate = dayjs().format('YYYY-MM-DD')
         const rentDate = dayjs(aluguel.rows[0].rentDate).format('YYYY-MM-DD')
-        const diferença = dayjs(returnDate).diff(rentDate, 'day')
+        const diferenca = dayjs(returnDate).diff(rentDate, 'day')
         const daysRented = aluguel.rows[0].daysRented
         let delayFee = null
-        if(diferença>daysRented){
-            const pricePerDay = aluguel.rows[0].pricePerDay
-            delayFee = (diferença - daysRented)*pricePerDay
+        if(diferenca>daysRented){
+            const pricePerDay = jogo.pricePerDay
+            delayFee = (diferenca - daysRented)*pricePerDay
         }
 
         await db.query(`
