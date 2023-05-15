@@ -81,96 +81,43 @@ export async function postAlugueis(req, res){
 }
 
 //finalizar alugueis
-/*export async function postRetorno(req, res) {
-  const { id } = req.params;
+export async function postRetorno(req, res){
+    const {id} = req.params
 
-  try {
-    const aluguel = await db.query(`SELECT * FROM rentals WHERE id=$1`, [id]);
-    if (aluguel.rows.length === 0) {
-      return res.status(404).send("Aluguel não encontrado!");
+    try{
+        const aluguel = await db.query(`SELECT * FROM rentals WHERE id=$1`,
+        [id])
+        if(aluguel.rows.length === 0){
+            return res.status(404).send("Aluguel não encontrado!")
+        }
+
+        const finalizado = await db.query(`
+        SELECT * FROM rentals 
+        WHERE "returnDate" IS NOT NULL
+        AND id=$1;`, [id])
+        if(finalizado.rows.length !== 0){
+            return res.status(400).send("Aluguel já finalizado!")
+        }
+
+        const returnDate = dayjs().format('YYYY-MM-DD')
+        const rentDate = dayjs(aluguel.rows[0].rentDate).format('YYYY-MM-DD')
+        const diferença = dayjs(returnDate).diff(rentDate, 'day')
+        const daysRented = aluguel.rows[0].daysRented
+        let delayFee = null
+        if(diferença>daysRented){
+            const pricePerDay = aluguel.rows[0].pricePerDay
+            delayFee = (diferença - daysRented)*pricePerDay
+        }
+
+        await db.query(`
+        UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3
+        `, [returnDate, delayFee, id])
+
+        res.status(200).send("Aluguel retornado com sucesso!")
+
+    } catch(err){
+        res.status(500).send(err.message)
     }
-
-    const finalizado = await db.query(`
-      SELECT * FROM rentals 
-      WHERE "returnDate" IS NOT NULL
-      AND id=$1;
-    `, [id]);
-    if (finalizado.rows.length !== 0) {
-      return res.status(400).send("Aluguel já finalizado!");
-    }
-
-    await db.query(`
-    UPDATE rentals 
-    SET "returnDate" = $1, 
-        "delayFee" = CASE
-          WHEN $1 > rentals."rentDate" + rentals."daysRented" * INTERVAL '1 day'
-          THEN ($1 - rentals."rentDate" - rentals."daysRented" * INTERVAL '1 day') * rentals."pricePerDay"
-          ELSE NULL
-        END
-    WHERE id = $2;
-  `, [returnDate, id]);
-
-
-    const returnDate = dayjs().format('YYYY-MM-DD');
-    const rentDate = dayjs(aluguel.rows[0].rentDate).format('YYYY-MM-DD');
-    const daysRented = aluguel.rows[0].daysRented;
-    const pricePerDay = aluguel.rows[0].pricePerDay;
-
-    let delayFee = null;
-    const diffDias = dayjs(returnDate).diff(rentDate, 'day');
-    if (diffDias > daysRented) {
-      const diasAtraso = diffDias - daysRented;
-      delayFee = diasAtraso * pricePerDay;
-    }
-
-    await db.query(`
-      UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3
-    `, [returnDate, delayFee, id]);
-
-    res.status(200).send("Aluguel retornado com sucesso!")
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
-}*/
-
-export async function postRetorno(req, res) {
-  const { id } = req.params;
-
-  try {
-    const aluguel = await db.query(`SELECT * FROM rentals WHERE id=$1`, [id]);
-    if (aluguel.rows.length === 0) {
-      return res.status(404).send("Aluguel não encontrado!");
-    }
-
-    const finalizado = await db.query(`
-      SELECT * FROM rentals 
-      WHERE "returnDate" IS NOT NULL
-      AND id=$1;
-    `, [id]);
-    if (finalizado.rows.length !== 0) {
-      return res.status(400).send("Aluguel já finalizado!");
-    }
-
-    const returnDate = dayjs().format('YYYY-MM-DD');
-    const rentDate = dayjs(aluguel.rows[0].rentDate).format('YYYY-MM-DD');
-    const daysRented = aluguel.rows[0].daysRented;
-    const pricePerDay = aluguel.rows[0].pricePerDay;
-
-    let delayFee = null;
-    const diffDias = dayjs(returnDate).diff(rentDate, 'day');
-    if (diffDias > daysRented) {
-      const diasAtraso = diffDias - daysRented;
-      delayFee = diasAtraso * pricePerDay;
-    }
-
-    await db.query(`
-      UPDATE rentals SET "returnDate" = $1, "delayFee" = $2 WHERE id = $3
-    `, [returnDate, delayFee, id]);
-
-    res.status(200).send("Aluguel retornado com sucesso!")
-  } catch (err) {
-    res.status(500).send(err.message);
-  }
 }
 
 //apagar aluguel
