@@ -4,8 +4,33 @@ import dayjs from "dayjs";
 //listar alugueis
 export async function getAlugueis(req, res){
     try{
-        const alugueis = await db.query(`SELECT * FROM rentals`)
-        res.send(alugueis.rows)
+        const alugueis = await db.query(`
+        SELECT rentals.*, customers.name as "customerName", games.name as "gameName"
+        FROM rentals
+        JOIN customers ON rentals."customerId" = customers.id
+        JOIN games ON rentals."gameId" = games.id
+        `)
+
+        const aluguelFormatado = alugueis.rows.map((aluguel) => ({
+            id: aluguel.id,
+            customerId: aluguel.customerId,
+            gameId: aluguel.gameId,
+            rentDate: dayjs(aluguel.rentDate).format('YYYY-MM-DD'),
+            daysRented: aluguel.daysRented,
+            returnDate: aluguel.returnDate,
+            originalPrice: aluguel.originalPrice,
+            delayFee: aluguel.delayFee,
+            customer: {
+              id: aluguel.customerId,
+              name: aluguel.customerName,
+            },
+            game: {
+              id: aluguel.gameId,
+              name: aluguel.gameName,
+            },
+          }))
+
+        res.send(aluguelFormatado)
     } catch(err){
         res.status(500).send(err.message)
     }
